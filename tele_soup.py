@@ -36,11 +36,14 @@ class teleSoup:
 
 #---- Uzupełnia listę 'contents' danymi dla BeautifulSoup
     def make_content(self):
+        startTime = time.time()
         for link in self.links:
             source = requests.get(link).text
             content = BeautifulSoup(source, features='html.parser')
             contents.append(content)
             print(f'Content for {link[27:]} made successfully.')
+        endTime = time.time()
+        print('Took %s seconds to get this data.' % (endTime - startTime))
         return self.get_day()
 
 # ---- Znajduje każdy program (kanał, tytuł, godzinę i opis) i przypisuje go do klasy TvShow
@@ -49,7 +52,7 @@ class teleSoup:
         for soup in self.contents:
             mo = canalRegex.search(soup.title.text)
             canal_var = mo.group()  # canal
-            for div in soup.find_all("div", class_='lista'):
+            for div in soup.find_all('div', class_='lista'):
                 for li_tag in div.find_all('li'):
                     for span in li_tag.find_all('span'):  # title
                         title_var = span.text
@@ -70,26 +73,33 @@ class teleSoup:
         return self.main_menu()
 
     def show_everything(self):
-        startTime = time.time()
         for show in shows:
             print(f'{show.canal} - {show.time} - {show.title}')
-        endTime = time.time()
-        print('Took %s seconds to get this data.' % (endTime - startTime)) 
         input('\n Press ENTER to go back to main menu')
         return self.main_menu()
 
     def show_canals(self):
         for canal in canals:
-            print(canal)
-        input('Press ENTER to go back to main menu...')
-        return self.main_menu()
+            print(str(canals.index(canal)) + ' - ' + canal)
+        x = input('Type number of canal to show.')
+        x=int(x)
 
+        if x <= len(canals) and x >= 0:
+            return self.show_single(x)
+        else:
+            return self.main_menu()
+
+    def show_single(self, canal_index=1):
+        for show in shows:
+            if canals[canal_index] == show.canal:
+                print(f'{show.canal} - {show.time} - {show.title}')
 
     def main_menu(self):
         os.system('cls')
         print('------ T E L E S O U P -----')
         if self.contents == []:
-            input('\n\n Press ENTER to start collecting data...')
+
+            print('\nNo data available.\n Collecting data...\n')
             return self.make_content()
         else:
             options = ['0', '1', '2']
@@ -114,13 +124,6 @@ class teleSoup:
     def main(self):
         self.main_menu()
 
-
-#---- Podaje program dla określonego kanału
-def show_canal(canal):
-    print(f'Program dla {canal} na dziś: \n')
-    for show in shows:
-        if show.canal == canal:
-            print(str(show.time) + ' ' + show.title)
 
 #---- Run:
 
