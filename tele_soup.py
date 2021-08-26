@@ -44,7 +44,6 @@ class teleSoup:
         #     self.links = [main_link + prog.rstrip() for prog in progs.readlines()]
         with open('all_links.pkl', 'rb') as all_links:
             self.links = [main_link + href for href in pickle.load(all_links)]
-        print(self.links)
         return self.if_online()
 
     '''   Uzupełnia listę 'contents' danymi dla BeautifulSoup   '''
@@ -124,7 +123,7 @@ class teleSoup:
         print('Today on ' + self.canals[canal_index] + '\n\n')
         for show in self.shows:
             if self.canals[canal_index] == show.canal:
-                print(f'{show.canal} - {show.time} - {show.title}')
+                print(f'\n{show.canal} - {show.time} - {show.title} - {show.info}')
         input('\n\nPress ENTER to go back to main menu.\n')
         return self.main_menu()
 
@@ -150,12 +149,10 @@ class teleSoup:
         with open('canals.pkl', 'rb') as canals_file:
            self.canals = pickle.load(canals_file)
         print('\nCanals loaded locally...')
-        print(self.canals)
 
         with open('shows.pkl', 'rb') as shows_file:
             self.shows = pickle.load(shows_file)
         print('Shows loaded locally...')
-        print(self.shows)
 
         input("\nPress any key to proceed...\n>>> ")
         return self.main_menu()
