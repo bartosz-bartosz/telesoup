@@ -8,6 +8,13 @@ from datetime import datetime
 import time
 #----------------------------------------------------------------------
 
+main_link = 'https://www.telemagazyn.pl/'
+links = []
+contents = []
+shows = []
+
+with open('progs.txt', 'r') as progs:
+    links = [main_link + prog.rstrip() for prog in progs.readlines()]
 
 class TvShow:
     def __init__(self, title, time, info, canal):
@@ -15,20 +22,6 @@ class TvShow:
         self.time = time
         self.info = info
         self.canal = canal
-
-
-links = ['https://www.telemagazyn.pl/fokus_tv', 'https://www.telemagazyn.pl/tvp_historia', 'https://www.telemagazyn.pl/ttv/',
-         'https://www.telemagazyn.pl/stopklatka/', 'https://www.telemagazyn.pl/discovery/', 'https://www.telemagazyn.pl/discovery_science/',
-         'https://www.telemagazyn.pl/discovery_historia/', 'https://www.telemagazyn.pl/discovery_life/', 'https://www.telemagazyn.pl/national_geographic/',
-         'https://www.telemagazyn.pl/nat_geo_wild/', 'https://www.telemagazyn.pl/history/', 'https://www.telemagazyn.pl/nat_geo_people/',
-         'https://www.telemagazyn.pl/animal_planete_hd/', 'https://www.telemagazyn.pl/polsat_doku/', 'https://www.telemagazyn.pl/polsat_viasat_history/',
-         'https://www.telemagazyn.pl/polsat_viasat_nature/', 'https://www.telemagazyn.pl/polsat_viasat_explorer/',
-         'https://www.telemagazyn.pl/crime_investigation_network_polsat/', 'https://www.telemagazyn.pl/bbc_earth/', 'https://www.telemagazyn.pl/bbc_lifestyle/',
-         'https://www.telemagazyn.pl/bbc_brit/', 'https://www.telemagazyn.pl/water_planet/']
-
-contents = []
-shows = []
-
 
 #---- Uzupełnia listę 'contents' danymi dla BeautifulSoup
 def makeContent():
@@ -68,17 +61,12 @@ def showCanal(canal):
         if show.canal == canal:
             print(str(show.time) + ' ' + show.title)
 
-# def show3hrs(canal):
-#     for show in shows:
-#         if show.time
-
-
 #---- Run:
 startTime = time.time()
 
 makeContent()
-#showDay()
-#showCanal('Viasat Nature HD')
+showDay()
+showCanal('Viasat Nature HD')
 for show in shows:
     print(f'{show.canal} - {show.time} - {show.title}')
 endTime = time.time()
