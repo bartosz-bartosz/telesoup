@@ -7,15 +7,15 @@ import webbrowser
 import re
 from datetime import datetime
 import time
-#import dill as pickle
 import pickle
+import operator
 
 
 '''----------------------------------------------------------------------'''
 
 '''   VARIABLES  '''
 
-main_link = 'https://www.telemagazyn.pl/'
+main_link = 'https://www.telemagazyn.pl'
 links = []
 contents = []
 shows = []
@@ -40,8 +40,11 @@ class teleSoup:
 
     ''' Read links from txt file.   '''
     def read_links(self):
-        with open('progs.txt', 'r') as progs:
-            self.links = [main_link + prog.rstrip() for prog in progs.readlines()]
+        # with open('progs.txt', 'r') as progs:
+        #     self.links = [main_link + prog.rstrip() for prog in progs.readlines()]
+        with open('all_links.pkl', 'rb') as all_links:
+            self.links = [main_link + href for href in pickle.load(all_links)]
+        print(self.links)
         return self.if_online()
 
     '''   Uzupełnia listę 'contents' danymi dla BeautifulSoup   '''
@@ -71,8 +74,7 @@ class teleSoup:
                     for span in li_tag.find_all('span'):  # title
                         title_var = span.text
                     for em_tag in li_tag.find_all('em'):  # time
-                        time_obj = datetime.strptime(
-                            em_tag.text, ' %H:%M ').time()  # time object
+                        time_obj = datetime.strptime(em_tag.text, ' %H:%M ').time()  # time object
                         time_var = time_obj
                     for p_tag in li_tag.find_all('p'):  # info
                         if 'Odcinek: ' in p_tag.text:
@@ -96,8 +98,9 @@ class teleSoup:
 
     '''   Shows all shows for all canals.   '''
     def show_everything(self):
-        for show in self.shows:
-            print(f'{show.canal} - {show.time} - {show.title}')
+        sorted_shows = sorted(self.shows, key=operator.attrgetter('time'))
+        for show in sorted_shows:
+            print(f'{show.time} - {show.canal} - {show.title}')
         input('\n Press ENTER to go back to main menu')
         return self.main_menu()
 
