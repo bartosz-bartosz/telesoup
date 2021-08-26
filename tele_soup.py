@@ -7,7 +7,12 @@ import webbrowser
 import re
 from datetime import datetime
 import time
-#----------------------------------------------------------------------
+import dill as pickle
+
+
+'''----------------------------------------------------------------------'''
+
+'''   VARIABLES  '''
 
 main_link = 'https://www.telemagazyn.pl/'
 links = []
@@ -15,8 +20,7 @@ contents = []
 shows = []
 canals = []
 
-with open('progs.txt', 'r') as progs:
-    links = [main_link + prog.rstrip() for prog in progs.readlines()]
+'''   CLASSES   '''
 
 class TvShow:
     def __init__(self, title, time, info, canal):
@@ -33,22 +37,34 @@ class teleSoup:
         self.shows = shows
         self.canals = canals
 
+    ''' Read links from txt file.   '''
+    def read_links(self):
+        with open('progs.txt', 'r') as progs:
+            self.links = [main_link + prog.rstrip() for prog in progs.readlines()]
+        return self.if_online()
 
-#---- Uzupełnia listę 'contents' danymi dla BeautifulSoup
-    def make_content(self):
+    '''   Uzupełnia listę 'contents' danymi dla BeautifulSoup   '''
+    def make_soup(self):
         startTime = time.time()
+        
         for link in self.links:
             source = requests.get(link).text
             content = BeautifulSoup(source, features='html.parser')
             contents.append(content)
-            print(f'Content for {link[27:]} made successfully.')
+            print(f'Content for {link[27:]} done.')
+
+        with open('timestamp.txt', 'wb') as timestamp:
+            pickle.dump(contents, timestamp)
+
         endTime = time.time()
-        print('Took %s seconds to get this data.' % (endTime - startTime))
+        print('\nTook %s seconds to get this data.' % (endTime - startTime))
         return self.get_day()
 
-# ---- Znajduje każdy program (kanał, tytuł, godzinę i opis) i przypisuje go do klasy TvShow
+    '''   Znajduje każdy program (kanał, tytuł, godzinę i opis) i przypisuje go do klasy TvShow   '''
     def get_day(self):
+
         canalRegex = re.compile(r'^[^-]*[^ -]')
+
         for soup in self.contents:
             mo = canalRegex.search(soup.title.text)
             canal_var = mo.group()  # canal
@@ -68,16 +84,19 @@ class teleSoup:
 
                     self.shows.append(TvShow(title_var, time_var, info_var, canal_var))
             self.canals.append(canal_var)
+
         print('getday succesful')
         input('Press ENTER to go back to main menu...')
         return self.main_menu()
 
+    '''   Shows all shows for all canals.   '''
     def show_everything(self):
         for show in shows:
             print(f'{show.canal} - {show.time} - {show.title}')
         input('\n Press ENTER to go back to main menu')
         return self.main_menu()
 
+    '''   Shows a list of available canals.   '''
     def show_canals(self):
         for canal in canals:
             print(str(canals.index(canal)) + ' - ' + canal)
@@ -89,43 +108,63 @@ class teleSoup:
         else:
             return self.main_menu()
 
+    '''   Shows shows for a single chosen canal.   '''
     def show_single(self, canal_index=1):
         for show in shows:
             if canals[canal_index] == show.canal:
                 print(f'{show.canal} - {show.time} - {show.title}')
 
+    '''   Choose offline or online mode. If offlina data will be taken from last saved file.   '''
+    def if_online(self):
+        print('\n------ T E L E S O U P -----')
+        print('\n\nIf offline chosen, the last saved timestamp will be used.')
+        print(r'''
+        ONLINE - 1
+        OFFLINE - 0
+        ''')
+        x = input('Choose option:\n>>> ')
+        if x not in ['0', '1']:
+            self.if_online()
+        elif x == '0':
+            return self.main_menu()
+        elif x == '1':
+            print('\n Collecting data...\n')
+            return self.make_soup()
+
+    def offline_run(self):
+        with open('timestamp.txt', 'r') as timestamp:
+            contents = pickle.load(timestamp)
+        return self.get_day()
+
+    '''   Shows main menu   '''
     def main_menu(self):
         os.system('cls')
-        print('------ T E L E S O U P -----')
-        if self.contents == []:
+        print('\n------ T E L E S O U P -----')
+        options = ['0', '1', '2']
+        print('\nData collected.\n')
+        print(r'''--- OPTIONS
 
-            print('\nNo data available.\n Collecting data...\n')
-            return self.make_content()
-        else:
-            options = ['0', '1', '2']
-            print('\nData collected.\n')
-            print(r'''--- OPTIONS
+            1 - View all available data
+            2 - Show available canals
+            0 - Exit''')
 
-                1 - View all available data
-                2 - Show available canals
-                0 - Exit''')
+        choice = input('\nChoose option:\n>>> ')
+        if choice not in options:
+            return self.main_menu()
+        elif choice == "0":
+            return exit()
+        elif choice == "1":
+            return self.show_everything()
+        elif choice == "2":
+            return self.show_canals()
 
-            choice = input('\nChoose option:')
-            if choice not in options:
-                return self.main_menu()
-            elif choice == "0":
-                return exit()
-            elif choice == "1":
-                return self.show_everything()
-            elif choice == "2":
-                return self.show_canals()
-
-  
+    '''   Main   '''
     def main(self):
-        self.main_menu()
+        self.read_links()
 
+    '''    ---------------------------------------------------------------------------------   '''
 
-#---- Run:
+    '''   RUN   '''
 
 run = teleSoup(main_link, links, contents, shows, canals)
 
