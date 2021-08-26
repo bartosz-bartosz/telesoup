@@ -7,7 +7,8 @@ import webbrowser
 import re
 from datetime import datetime
 import time
-import dill as pickle
+#import dill as pickle
+import pickle
 
 
 '''----------------------------------------------------------------------'''
@@ -53,9 +54,6 @@ class teleSoup:
             contents.append(content)
             print(f'Content for {link[27:]} done.')
 
-        with open('timestamp.txt', 'wb') as timestamp:
-            pickle.dump(contents, timestamp)
-
         endTime = time.time()
         print('\nTook %s seconds to get this data.' % (endTime - startTime))
         return self.get_day()
@@ -85,39 +83,52 @@ class teleSoup:
                     self.shows.append(TvShow(title_var, time_var, info_var, canal_var))
             self.canals.append(canal_var)
 
-        print('getday succesful')
-        input('Press ENTER to go back to main menu...')
+        with open('canals.pkl', 'wb') as canals_file:
+            pickle.dump(self.canals, canals_file)
+        print('Saved backup of canals.')
+
+        with open('shows.pkl', 'wb') as shows_file:
+            pickle.dump(self.shows, shows_file)
+        print('Saved a backup of shows.')
+
+        input('\nPress ENTER to go back to main menu...')
         return self.main_menu()
 
     '''   Shows all shows for all canals.   '''
     def show_everything(self):
-        for show in shows:
+        for show in self.shows:
             print(f'{show.canal} - {show.time} - {show.title}')
         input('\n Press ENTER to go back to main menu')
         return self.main_menu()
 
     '''   Shows a list of available canals.   '''
     def show_canals(self):
-        for canal in canals:
-            print(str(canals.index(canal)) + ' - ' + canal)
-        x = input('Type number of canal to show.')
+        for canal in self.canals:
+            print(str(self.canals.index(canal)) + ' - ' + canal)
+        x = input('\nType number of canal to show.\n>>> ')
         x=int(x)
 
-        if x <= len(canals) and x >= 0:
+        if x <= len(self.canals) and x >= 0:
             return self.show_single(x)
         else:
             return self.main_menu()
 
     '''   Shows shows for a single chosen canal.   '''
     def show_single(self, canal_index=1):
-        for show in shows:
-            if canals[canal_index] == show.canal:
+        print('\n\n')
+        os.system('cls')
+        print('\n------ T E L E S O U P -----\n')
+        print('Today on ' + self.canals[canal_index] + '\n\n')
+        for show in self.shows:
+            if self.canals[canal_index] == show.canal:
                 print(f'{show.canal} - {show.time} - {show.title}')
+        input('\n\nPress ENTER to go back to main menu.\n')
+        return self.main_menu()
 
     '''   Choose offline or online mode. If offlina data will be taken from last saved file.   '''
     def if_online(self):
         print('\n------ T E L E S O U P -----')
-        print('\n\nIf offline chosen, the last saved timestamp will be used.')
+        print('\n\nIf offline chosen, the last saved backup files will be used.')
         print(r'''
         ONLINE - 1
         OFFLINE - 0
@@ -126,15 +137,25 @@ class teleSoup:
         if x not in ['0', '1']:
             self.if_online()
         elif x == '0':
-            return self.main_menu()
+            return self.offline_run()
         elif x == '1':
             print('\n Collecting data...\n')
             return self.make_soup()
 
     def offline_run(self):
-        with open('timestamp.txt', 'r') as timestamp:
-            contents = pickle.load(timestamp)
-        return self.get_day()
+
+        with open('canals.pkl', 'rb') as canals_file:
+           self.canals = pickle.load(canals_file)
+        print('\nCanals loaded locally...')
+        print(self.canals)
+
+        with open('shows.pkl', 'rb') as shows_file:
+            self.shows = pickle.load(shows_file)
+        print('Shows loaded locally...')
+        print(self.shows)
+
+        input("\nPress any key to proceed...\n>>> ")
+        return self.main_menu()
 
     '''   Shows main menu   '''
     def main_menu(self):
@@ -144,9 +165,9 @@ class teleSoup:
         print('\nData collected.\n')
         print(r'''--- OPTIONS
 
-            1 - View all available data
-            2 - Show available canals
-            0 - Exit''')
+    1 - View all available data
+    2 - Show available canals
+    0 - Exit''')
 
         choice = input('\nChoose option:\n>>> ')
         if choice not in options:
